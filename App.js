@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, TextInput, View, Image, SafeAreaView, TouchableOpacity, Button } from 'react-native';
+import { StyleSheet, Text, TextInput, View, Image, SafeAreaView, TouchableOpacity, FlatList } from 'react-native';
 import 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -24,14 +24,13 @@ const App = () => {
 };
 
 const StartScreen = ({ navigation }) => {
-  const [email, setEmail] = useState('');   
-  
+  const [email, setEmail] = useState('');  
   return (
     <SafeAreaView style={styles.container}>      
       <Image 
         style={styles.logo}
         source={require("./assets/RocketElevatorsLogo.png")} 
-        />               
+      />               
 
       <View style={styles.inputView}>        
         <TextInput
@@ -40,57 +39,76 @@ const StartScreen = ({ navigation }) => {
           placeholderTextColor="#003f5c"
           onChangeText={email => setEmail(email)}            
         />
-      </View>        
-      {/* <Button
-        title="LOGIN" 
-        style={styles.loginBtn} 
-        onPress={() => 
-          navigation.navigate('Home')
-        } 
-      />   */}
-      <TouchableOpacity style={styles.loginBtn} onPress={() => navigation.navigate('Home')} >
+      </View>   
+     
+      <TouchableOpacity style={styles.loginBtn} onPress={() => getEmployeesFromApi(email, {navigation})} >
         <Text>LOGIN</Text>
       </TouchableOpacity>    
-      {/* <StatusBar style="auto" />                       */}
+      <StatusBar style="auto" />                      
     </SafeAreaView>   
   );
 };
-//() =>getEmployeesFromApiAsync(email)}
+//() => getEmployeesFromApi(email)}
 
 const HomeScreen = ({ navigation }) => {
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    fetch('http://samcoutinhoapi.azurewebsites.net/api/elevators/oos')
+    .then((response) => response.json())
+    .then((json) => {
+      setData(json.id)
+    })
+  }, []);
   return (
     <SafeAreaView style={styles.container}>      
-      {/* <Image 
+      <Image 
         style={styles.logo}
         source={require("./assets/RocketElevatorsLogo.png")} 
-        /> */}
-      {/* <Text>HomeScreen</Text>       */}
-      
+      />
+
       <TouchableOpacity style={styles.loginBtn} onPress={() => navigation.navigate('Start')} >
         <Text>HomeScreen</Text>
       </TouchableOpacity>  
-                          
+
+      <FlatList
+        data={data}
+        renderItem={({item}) => <Text style={styles.item}>{item.id}</Text>}
+      />                             
     </SafeAreaView>   
   );
 };
 
-const getEmployeesFromApiAsync = (_email) => {
+const getListOfElevators = () => {
+  fetch('http://samcoutinhoapi.azurewebsites.net/api/elevators/oos')
+  .then((response) => response.json())
+  .then((json) => {
+    console.log(json); 
+    json.forEach(element => {
+      console.log(element)     
+    });
+    return json
+  })
+}
+
+const getEmployeesFromApi = ( _email, {navigation}) => {
   return fetch('https://samcoutinhoapi.azurewebsites.net/api/employees')  
+    //.then(() => navigation.navigate('Home'))
     .then((response) => response.json())
-    .then((json) => {
+    .then((json) => {      
       var doesTheEmailExist = false;
       console.log('email = ');
       console.log(_email);
       json.forEach(element => {
-        console.log(element.email);
-        if (element.email === _email) {
-          doesTheEmailExist = true;          
-          () => navigation.navigate('Home');
-          //console.log('email correct');          
+        //console.log(element.email);
+        if (element.email == _email) {
+          doesTheEmailExist = true;         
+          navigation.navigate('Home');
+          console.log(element.email);          
         }    
       });
       if (doesTheEmailExist == false) {
-        alert('Incorrect email');         
+        alert('The email entered is not the email of a listed agent');         
       }         
     })    
     .catch((error) => {
@@ -133,6 +151,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 40,
     backgroundColor: 'royalblue',
-  }
+  },
+  item: {
+    padding: 10,
+    fontSize: 18,
+    height: 44,
+  },
 })
 export default App;
