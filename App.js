@@ -1,9 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, TextInput, View, Image, SafeAreaView, TouchableOpacity, FlatList } from 'react-native';
+import { StyleSheet, Text, TextInput, View, Image, SafeAreaView, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
 import 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { render } from 'react-dom';
 
 console.log('Starting App');
 const Stack = createStackNavigator();
@@ -52,59 +53,78 @@ const StartScreen = ({ navigation }) => {
 
 const HomeScreen = ({ navigation }) => {
   const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState();
+  isLoading => setIsLoading(true)
 
   useEffect(() => {
     fetch('http://samcoutinhoapi.azurewebsites.net/api/elevators/oos')
     .then((response) => response.json())
     .then((json) => {
-      setData(json.id)
-    })
+      //const data = [];
+      //console.log(json.id); 
+      json.forEach(element => {
+        //console.log(element.id)
+        data.push(element.id)
+      });      
+      data => setData(data)
+      isLoading => setIsLoading(false)
+      //console.log(data);         
+    })    
+    .catch(e => console.log(e));
   }, []);
-  return (
-    <SafeAreaView style={styles.container}>      
-      <Image 
-        style={styles.logo}
-        source={require("./assets/RocketElevatorsLogo.png")} 
-      />
+  if (isLoading) {
+    return (
+      <View>
+        <ActivityIndicator/>
+      </View>
+    )
+  } else {
+      return (
+        <SafeAreaView style={styles.container}>      
+          <Image 
+            style={styles.logo}
+            source={require("./assets/RocketElevatorsLogo.png")} 
+          />
+          
 
-      <TouchableOpacity style={styles.loginBtn} onPress={() => navigation.navigate('Start')} >
-        <Text>HomeScreen</Text>
-      </TouchableOpacity>  
-
-      <FlatList
-        data={data}
-        renderItem={({item}) => <Text style={styles.item}>{item.id}</Text>}
-      />                             
-    </SafeAreaView>   
-  );
+          <TouchableOpacity style={styles.loginBtn} onPress={() => getListOfElevators()} >
+            <Text>HomeScreen</Text>
+          </TouchableOpacity>  
+          <Text style={styles.item}>{data}</Text>    
+          <StatusBar style="auto" />                            
+        </SafeAreaView>   
+      );
+    }
 };
 
-const getListOfElevators = () => {
+const getListOfElevators = () => {  
   fetch('http://samcoutinhoapi.azurewebsites.net/api/elevators/oos')
   .then((response) => response.json())
   .then((json) => {
-    console.log(json); 
+    const data = [];
+    //console.log(json.id); 
     json.forEach(element => {
-      console.log(element)     
-    });
-    return json
-  })
+     //console.log(element.id)
+      data.push(element.id)
+    }); 
+    console.log(data);         
+  });
 }
 
 const getEmployeesFromApi = ( _email, {navigation}) => {
-  return fetch('https://samcoutinhoapi.azurewebsites.net/api/employees')  
-    //.then(() => navigation.navigate('Home'))
+  return fetch('https://samcoutinhoapi.azurewebsites.net/api/employees') 
+    
     .then((response) => response.json())
     .then((json) => {      
       var doesTheEmailExist = false;
-      console.log('email = ');
-      console.log(_email);
+      //console.log('email = ');
+      //console.log(_email);
       json.forEach(element => {
         //console.log(element.email);
         if (element.email == _email) {
           doesTheEmailExist = true;         
           navigation.navigate('Home');
-          console.log(element.email);          
+          //console.log(element.email);          
         }    
       });
       if (doesTheEmailExist == false) {
