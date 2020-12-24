@@ -4,10 +4,10 @@ import { StyleSheet, Text, TextInput, View, Image, SafeAreaView, TouchableOpacit
 import 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { render } from 'react-dom';
+import { ScrollView } from 'react-native-gesture-handler';
 
 console.log('Starting App');
-const Stack = createStackNavigator();
+const Stack = createStackNavigator(); 
 
 const App = () => {  
   return (
@@ -23,7 +23,6 @@ const App = () => {
     </NavigationContainer>
   );
 };
-
 const StartScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');  
   return (
@@ -31,8 +30,7 @@ const StartScreen = ({ navigation }) => {
       <Image 
         style={styles.logo}
         source={require("./assets/RocketElevatorsLogo.png")} 
-      />               
-
+      />  
       <View style={styles.inputView}>        
         <TextInput
           style={styles.TextInput}
@@ -40,8 +38,7 @@ const StartScreen = ({ navigation }) => {
           placeholderTextColor="#003f5c"
           onChangeText={email => setEmail(email)}            
         />
-      </View>   
-     
+      </View>        
       <TouchableOpacity style={styles.loginBtn} onPress={() => getEmployeesFromApi(email, {navigation})} >
         <Text>LOGIN</Text>
       </TouchableOpacity>    
@@ -52,79 +49,52 @@ const StartScreen = ({ navigation }) => {
 //() => getEmployeesFromApi(email)}
 
 const HomeScreen = ({ navigation }) => {
-  const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState();
-  isLoading => setIsLoading(true)
-
+  const [elevator, setElevator] = useState([]);  
+  const getListOfElevators = async () => {  
+    const res = await fetch('http://samcoutinhoapi.azurewebsites.net/api/elevators/oos');
+    const data = await res.json();
+    setElevator(data)    
+  }
   useEffect(() => {
-    fetch('http://samcoutinhoapi.azurewebsites.net/api/elevators/oos')
-    .then((response) => response.json())
-    .then((json) => {
-      //const data = [];
-      //console.log(json.id); 
-      json.forEach(element => {
-        //console.log(element.id)
-        data.push(element.id)
-      });      
-      data => setData(data)
-      isLoading => setIsLoading(false)
-      //console.log(data);         
-    })    
-    .catch(e => console.log(e));
-  }, []);
-  if (isLoading) {
-    return (
-      <View>
-        <ActivityIndicator/>
-      </View>
-    )
-  } else {
-      return (
-        <SafeAreaView style={styles.container}>      
-          <Image 
-            style={styles.logo}
-            source={require("./assets/RocketElevatorsLogo.png")} 
-          />
-          
+    getListOfElevators();    
+  }, []); 
+  // const elevator = [];
+  // const listItems = elevators.map((elevator) =>
+  //     <li>{elevator}</li>
+  // );
+  if (!elevator) return null;
+  console.log(elevator); 
+  
+  return (
+    <SafeAreaView style={styles.container}>        
+        <Image 
+          style={styles.logo}
+          source={require("./assets/RocketElevatorsLogo.png")} 
+        />        
 
-          <TouchableOpacity style={styles.loginBtn} onPress={() => getListOfElevators()} >
-            <Text>HomeScreen</Text>
-          </TouchableOpacity>  
-          <Text style={styles.item}>{data}</Text>    
-          <StatusBar style="auto" />                            
-        </SafeAreaView>   
-      );
-    }
+        <TouchableOpacity style={styles.loginBtn} onPress={() => navigation.navigate('Start')} >
+          <Text>Log Out</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.item}>Lists of all the elevators that are not in operation</Text>
+        
+        {elevator.map(elevator => <TouchableOpacity style={styles.elevatorBtn}><Text>Elevator ID: {elevator.id}</Text></TouchableOpacity>)}          
+
+        <StatusBar style="auto" />                                 
+    </SafeAreaView>   
+  );    
 };
-
-const getListOfElevators = () => {  
-  fetch('http://samcoutinhoapi.azurewebsites.net/api/elevators/oos')
-  .then((response) => response.json())
-  .then((json) => {
-    const data = [];
-    //console.log(json.id); 
-    json.forEach(element => {
-     //console.log(element.id)
-      data.push(element.id)
-    }); 
-    console.log(data);         
-  });
-}
 
 const getEmployeesFromApi = ( _email, {navigation}) => {
   return fetch('https://samcoutinhoapi.azurewebsites.net/api/employees') 
     
     .then((response) => response.json())
     .then((json) => {      
-      var doesTheEmailExist = false;
-      //console.log('email = ');
-      //console.log(_email);
-      json.forEach(element => {
-        //console.log(element.email);
+      var doesTheEmailExist = false;      
+      json.forEach(element => {        
         if (element.email == _email) {
           doesTheEmailExist = true;         
-          navigation.navigate('Home');
-          //console.log(element.email);          
+          navigation.navigate('Home');                 
         }    
       });
       if (doesTheEmailExist == false) {
@@ -172,10 +142,25 @@ const styles = StyleSheet.create({
     marginTop: 40,
     backgroundColor: 'royalblue',
   },
+  elevatorBtn: {
+    width: "50%",
+    borderRadius: 15,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
+    backgroundColor: 'firebrick',
+  },
   item: {
     padding: 10,
     fontSize: 18,
     height: 44,
+  },
+  list: {    
+    padding: 10,
+    fontSize: 18,
+    height: 44,
+    justifyContent: "center",
   },
 })
 export default App;
