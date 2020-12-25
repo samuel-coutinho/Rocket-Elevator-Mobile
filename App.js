@@ -1,10 +1,12 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, TextInput, View, Image, SafeAreaView, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, TextInput, View, Image, SafeAreaView, TouchableOpacity } from 'react-native';
 import 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { ScrollView } from 'react-native-gesture-handler';
+//import { ScrollView } from 'react-native-gesture-handler';
+import {Card} from 'react-native-shadow-cards';
+
 
 console.log('Starting App');
 const Stack = createStackNavigator(); 
@@ -19,6 +21,7 @@ const App = () => {
           options={{ title: 'Welcome to Rocket Elevators Mobile App' }}
         />
         <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="ElevatorStatus" component={ElevatorStatusScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -30,7 +33,7 @@ const StartScreen = ({ navigation }) => {
       <Image 
         style={styles.logo}
         source={require("./assets/RocketElevatorsLogo.png")} 
-      />  
+      />      
       <View style={styles.inputView}>        
         <TextInput
           style={styles.TextInput}
@@ -41,12 +44,11 @@ const StartScreen = ({ navigation }) => {
       </View>        
       <TouchableOpacity style={styles.loginBtn} onPress={() => getEmployeesFromApi(email, {navigation})} >
         <Text>LOGIN</Text>
-      </TouchableOpacity>    
-      <StatusBar style="auto" />                      
+      </TouchableOpacity>      
+                          
     </SafeAreaView>   
   );
 };
-//() => getEmployeesFromApi(email)}
 
 const HomeScreen = ({ navigation }) => {
   const [elevator, setElevator] = useState([]);  
@@ -58,31 +60,69 @@ const HomeScreen = ({ navigation }) => {
   useEffect(() => {
     getListOfElevators();    
   }, []); 
-  // const elevator = [];
-  // const listItems = elevators.map((elevator) =>
-  //     <li>{elevator}</li>
-  // );
+
   if (!elevator) return null;
-  console.log(elevator); 
-  
+  console.log(elevator);   
+
   return (
-    <SafeAreaView style={styles.container}>        
-        <Image 
-          style={styles.logo}
-          source={require("./assets/RocketElevatorsLogo.png")} 
-        />        
+    <SafeAreaView style={styles.container}>         
+      <Image 
+        style={styles.logo}
+        source={require("./assets/RocketElevatorsLogo.png")} 
+      />        
 
-        <TouchableOpacity style={styles.loginBtn} onPress={() => navigation.navigate('Start')} >
-          <Text>Log Out</Text>
-        </TouchableOpacity>
+      <TouchableOpacity style={styles.loginBtn} onPress={() => navigation.navigate('Start')} >
+        <Text>Log Out</Text>
+      </TouchableOpacity>
 
-        <Text style={styles.item}>Lists of all the elevators that are not in operation</Text>
-        
-        {elevator.map(elevator => <TouchableOpacity style={styles.elevatorBtn}><Text>Elevator ID: {elevator.id}</Text></TouchableOpacity>)}          
-
-        <StatusBar style="auto" />                                 
+      <Text style={styles.item}>Lists of all the elevators that are not in operation</Text>
+      
+      {elevator.map(elevator =>
+          <TouchableOpacity style={styles.elevatorBtn} onPress={() => callElevatorStatusScreen(elevator, {navigation})}>
+            <Text>Elevator ID: {elevator.id}</Text>
+          </TouchableOpacity>)
+      }                                     
     </SafeAreaView>   
   );    
+};
+
+// const logOut = ({navigation}) => {
+//   setEmail('');
+//   navigation.navigate('Start');  
+// }
+
+const callElevatorStatusScreen = (_elevator, {navigation}) =>  {
+  navigation.navigate('ElevatorStatus', { 
+    id: _elevator.id,
+    status: _elevator.elevatorStatus,
+    model: _elevator.elevatorModel,
+    elevator_type: _elevator.elevatorType,
+    column_id: _elevator.columnId,
+    information: _elevator.information,
+    });
+}
+
+const ElevatorStatusScreen = ({ navigation, route }) => {  
+  //console.log('elevator satus screen')
+  
+  return (
+    <SafeAreaView style={styles.container}>      
+      <Image 
+        style={styles.logo}
+        source={require("./assets/RocketElevatorsLogo.png")} 
+      />    
+        
+      <Card style={{marginTop: 120, padding: 10, margin: 10}}>
+        <Text> Elevator ID : {route.params.id}</Text>
+        <Text> Status : {route.params.status}</Text>
+        <Text> Model : {route.params.model}</Text>
+        <Text> Elevator Type  : {route.params.elevator_type}</Text>
+        <Text> Column ID : {route.params.column_id}</Text>
+        <Text> Information : {route.params.information}</Text>        
+      </Card>    
+                         
+    </SafeAreaView>   
+  );
 };
 
 const getEmployeesFromApi = ( _email, {navigation}) => {
@@ -107,14 +147,14 @@ const getEmployeesFromApi = ( _email, {navigation}) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    //flex: 1,
+  container: {    
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
   },
   logo: {       
-    resizeMode: 'cover',       
+    resizeMode: 'cover', 
+    justifyContent: 'flex-start',      
     // width: '100%',
     // height: undefined,
     // aspectRatio: 1,
@@ -162,5 +202,16 @@ const styles = StyleSheet.create({
     height: 44,
     justifyContent: "center",
   },
+  txt: {
+    fontSize: 24,
+    color: '#333',
+    flex: 1,
+    alignSelf: 'stretch',
+    margin: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomWidth: 5,
+    borderBottomColor: '#eeee',
+},
 })
 export default App;
